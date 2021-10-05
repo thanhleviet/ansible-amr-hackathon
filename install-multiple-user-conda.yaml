@@ -1,0 +1,69 @@
+---
+- name: Create extra_conda_pkgs
+  ansible.builtin.file:
+    path: "{{ path_extra_conda }}"
+    group: "{{ conda_user_group }}"
+    state: directory
+    mode: 3775
+  become: true
+
+# https://raw.githubusercontent.com/uchida/ansible-miniconda-role/master/tasks/main.yml
+
+- name: miniconda installer is downloaded
+  get_url:
+    url="https://repo.continuum.io/miniconda/{{ miniconda_installer }}"
+    dest="/tmp/{{ miniconda_installer }}"
+    checksum="{{ miniconda_installer_checksum }}"
+    force={{ 'yes' if miniconda_installer_checksum == '' else 'no' }}
+    mode=0755
+
+- name: directory {{ miniconda_prefix | dirname }} exists
+  file:
+    path="{{ miniconda_prefix | dirname }}"
+    state=directory
+    follow=yes
+
+- name: tar is installed
+  package:
+    name=tar
+    state=present
+  become: true
+  when: miniconda_manage_dependencies
+
+- name: bzip2 is installed
+  package:
+    name=bzip2
+    state=present
+  become: true
+  when: miniconda_manage_dependencies
+
+
+- name: miniconda is installed
+  command: '/bin/bash "/tmp/{{ miniconda_installer}}" -u -b -p "{{ miniconda_prefix }}"'
+  args:
+    creates: "{{ miniconda_prefix }}/bin/conda"
+  become: yes
+
+- name: copy condarc 
+  ansible.builtin.copy:
+    src: ./files/condarc
+    dest: "{{ miniconda_prefix }}/.condarc"
+  become: yes
+
+- name: mamba installed
+  stat:
+    path: "{{ miniconda_prefix }}/bin/mamba"
+  register: mamba_path
+
+- name: Install mamba 
+  command: '"{{ miniconda_prefix }}/bin/conda" install mamba -y -q'
+  when: not mamba_path.stat.exists
+
+- name: miniconda is up-to-date
+  command: '"{{ miniconda_prefix }}/bin/mamba" update conda -y -q'
+  register: miniconda_update
+  when: miniconda_update_conda
+  changed_when: '"All requested packages already installed" in miniconda_update'
+
+- name: Install AMR tools
+  command: '"{{ miniconda_prefix }}/bin/mamba" install abricate seqkit -y -q'

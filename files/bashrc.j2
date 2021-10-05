@@ -1,0 +1,17 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+        . /etc/bashrc
+fi
+
+#  Source conda env
+source  "{{ miniconda_prefix }}/bin/activate"
+
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
+export CONDA_PKGS_DIRS="{{ path_extra_conda }}","{{ miniconda_prefix }}/pkgs","/home/$USER/.conda/pkgs"
+export CONDA_ENVS_DIRS=/home/$USER/.conda/envs
+
+# User specific aliases and functions

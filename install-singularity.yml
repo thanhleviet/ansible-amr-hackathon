@@ -1,0 +1,16 @@
+---
+- name: create a folder for go
+  file:
+    path: "{{ golang_install_dir }}"
+    recurse: yes
+  become_user: ubuntu
+  
+- name: apt update
+  apt:
+    cache_valid_time: 3600
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  become: yes
+
+- include_role:
+    name: lecorguille.singularity
