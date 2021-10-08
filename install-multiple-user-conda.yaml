@@ -42,7 +42,19 @@
   command: '/bin/bash "/tmp/{{ miniconda_installer}}" -u -b -p "{{ miniconda_prefix }}"'
   args:
     creates: "{{ miniconda_prefix }}/bin/conda"
-  become: yes
+  # become: yes
+
+# - name: Update permission pkgs folder
+#   ansible.builtin.file:
+#     path: "{{ item }}"
+#     owner: "{{ ansible_user }}"
+#     group: "{{ conda_user_group }}"
+#     state: directory
+#     mode: 3775
+#   with_items:
+#     - "{{ miniconda_prefix }}/pkgs"
+#     - "{{ miniconda_prefix }}/cache"
+#   become: true
 
 - name: copy condarc 
   ansible.builtin.copy:
@@ -66,4 +78,4 @@
   changed_when: '"All requested packages already installed" in miniconda_update'
 
 - name: Install AMR tools
-  command: '"{{ miniconda_prefix }}/bin/mamba" install abricate seqkit -y -q'
+  shell: '"{{ miniconda_prefix }}/bin/mamba" clean -i && "{{ miniconda_prefix }}/bin/mamba" install abricate seqkit -y -q'

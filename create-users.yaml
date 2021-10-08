@@ -1,7 +1,8 @@
 ---
 - name: Reading csv file
   read_csv:
-   path: users.csv
+  #  path: users.csv
+   path: amr_hackathon_users.csv
   register: user_list
   delegate_to: localhost
 

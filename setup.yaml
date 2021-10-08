@@ -2,8 +2,8 @@
 - hosts: all
   vars:
     conda_user_group: hackathon
-    path_extra_conda: /opt/extra_conda_pkgs
-    miniconda_prefix: /opt/miniconda3
+    path_extra_conda: /home/apps/extra_conda_pkgs
+    miniconda_prefix: /home/apps/miniconda3
     miniconda_python_version: 38
     miniconda_version: "4.10.3"
     miniconda_installer: Miniconda3-py{{ miniconda_python_version }}_{{ miniconda_version }}-Linux-x86_64.sh
@@ -13,12 +13,13 @@
     miniconda_manage_dependencies: True
     miniconda_env_create_opts: '-q'
     miniconda_env_update_opts: ''
+  
   tasks:
-    - name: Enable EPEL Repository
-      yum:
-        name: epel-release
-        state: latest
-      become: true
+    # - name: Enable EPEL Repository
+    #   yum:
+    #     name: epel-release
+    #     state: latest
+    #   become: true
     
     - name: Create usergroup hackathon
       ansible.builtin.group:
@@ -26,14 +27,30 @@
         state: present
       become: true
     
-    - name: Add centos into hackathon
+    - name: Add ubuntu into hackathon
       ansible.builtin.user:
-        name: centos
+        name: "{{ ansible_user }}"
         group: "{{ conda_user_group }}"
       become: true
     
     - name: Install conda
       include: 'install-multiple-user-conda.yaml'
-    
+      tags: conda
+      
     - name: Add users
       include: 'create-users.yaml'
+    
+    - name: Singularity
+      include: 'install-singularity.yml'
+      vars:
+        golang_version: "1.17.1"
+        singularity_version: "3.8.3"
+        golang_install_dir: '/home/apps/go/{{ golang_version }}'
+        golang_gopath: /home/apps/go/packages
+        bind_paths:
+          - /etc/localtime
+          - /etc/hosts
+          - /data
+          - /tmp
+      tags: singularity
+      become: yes
